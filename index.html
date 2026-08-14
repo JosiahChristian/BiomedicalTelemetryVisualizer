@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Biomedical Telemetry Visualizer</title>
+
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div>
+            <p class="eyebrow">COMPUTATIONAL BIOPHYSICS</p>
+            <h1>Biomedical Telemetry Visualizer</h1>
+            <p class="subtitle">
+                Real-time scientific visualization for cardiovascular and
+                electrophysiological system models.
+            </p>
+        </div>
+
+        <div class="system-status">
+            <span class="status-dot"></span>
+            SIMULATION ACTIVE
+        </div>
+    </header>
+
+    <main class="dashboard">
+
+        <section class="card visualization-card">
+            <div class="card-heading">
+                <div>
+                    <p class="eyebrow">LIVE SIGNAL MATRIX</p>
+                    <h2>Transient Biophysical Signal Oscilloscope</h2>
+                </div>
+
+                <span class="stream-label">BIOSTREAM-01</span>
+            </div>
+
+            <canvas
+                id="biomedCanvas"
+                width="900"
+                height="500">
+            </canvas>
+        </section>
+
+        <section class="card telemetry-card">
+            <div class="card-heading">
+                <div>
+                    <p class="eyebrow">TELEMETRY REGISTRY</p>
+                    <h2>Clinical State Array</h2>
+                </div>
+            </div>
+
+            <div class="metric-row cardio">
+                <span class="label">
+                    Systolic Hemodynamic Velocity
+                </span>
+
+                <div>
+                    <span id="vessel-readout" class="value">0.00</span>
+                    <span class="unit">cm/s</span>
+                </div>
+
+                <span class="descriptor">
+                    Mid-Artery Flow
+                </span>
+            </div>
+
+            <div class="metric-row pressure">
+                <span class="label">
+                    Arterial Blood Pressure
+                </span>
+
+                <div>
+                    <span id="pressure-readout" class="value">120/80</span>
+                    <span class="unit">mmHg</span>
+                </div>
+
+                <span class="descriptor">
+                    Dynamic Hemodynamic Scale
+                </span>
+            </div>
+
+            <div class="metric-row neuro">
+                <span class="label">
+                    Axon Action Potential
+                </span>
+
+                <div>
+                    <span id="nerve-readout" class="value">-70.00</span>
+                    <span class="unit">mV</span>
+                </div>
+
+                <span class="descriptor">
+                    Electrophysiological Spike
+                </span>
+            </div>
+
+            <div class="model-registry">
+                <p class="eyebrow">ACTIVE MODELS</p>
+
+                <div class="model-row">
+                    <span>Cardiovascular Flow</span>
+                    <span class="online">ONLINE</span>
+                </div>
+
+                <div class="model-row">
+                    <span>Arterial Pressure</span>
+                    <span class="online">ONLINE</span>
+                </div>
+
+                <div class="model-row">
+                    <span>Neural Electrophysiology</span>
+                    <span class="online">ONLINE</span>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        BiomedicalSystemsSolver ? Telemetry Visualization Layer
+    </footer>
+
+    <script src="src/app.js"></script>
+</body>
+</html>
