@@ -65,4 +65,5 @@ The visualizer provides a foundation for future integration of higher-fidelity b
 
 ## Live Application
 
-GitHub Pages deployment will provide the public interactive visualization endpoint.
+[Launch Biomedical Telemetry Visualizer](https://josiahchristian.github.io/BiomedicalTelemetryVisualizer/)
+
