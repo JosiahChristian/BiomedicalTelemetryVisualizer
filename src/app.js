@@ -1,262 +1,79 @@
-const canvas = document.getElementById("biomedCanvas");
-const ctx = canvas ? canvas.getContext("2d") : null;
+import { DEFAULT_CONFIG, advanceState, createState } from "./model.js";
 
-const vesselReadout = document.getElementById("vessel-readout");
-const pressureReadout = document.getElementById("pressure-readout");
-const nerveReadout = document.getElementById("nerve-readout");
-
-let waveOffset = 0;
-let actionPotential = -70.0;
-let simulationTick = 0;
+const canvas = document.querySelector("#biomedCanvas");
+const ctx = canvas.getContext("2d");
+const velocity = document.querySelector("#vessel-readout");
+const pressure = document.querySelector("#pressure-readout");
+const membrane = document.querySelector("#nerve-readout");
+const elapsed = document.querySelector("#elapsed-readout");
+const toggle = document.querySelector("#toggle-button");
+const status = document.querySelector("#system-status");
+let state = createState();
+let running = true;
+let accumulator = 0;
+let previous = performance.now();
+const cardioHistory = [];
+const neuralHistory = [];
 
 function resizeCanvas() {
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const deviceScale = window.devicePixelRatio || 1;
-
-    canvas.width = Math.max(
-        1,
-        Math.floor(rect.width * deviceScale)
-    );
-
-    canvas.height = Math.max(
-        1,
-        Math.floor(rect.height * deviceScale)
-    );
-
-    ctx.setTransform(
-        deviceScale,
-        0,
-        0,
-        deviceScale,
-        0,
-        0
-    );
+  const rect = canvas.getBoundingClientRect();
+  const scale = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.floor(rect.width * scale));
+  canvas.height = Math.max(1, Math.floor(rect.height * scale));
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
 }
 
-function cardiovascularState() {
-    const cardiacPhase = waveOffset * 0.05;
+function drawTrace(values, min, max, baseline, height, color, width) {
+  if (values.length < 2) return;
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+  values.forEach((value, index) => {
+    const x = index * width / Math.max(values.length - 1, 1);
+    const y = baseline + height / 2 - ((value - min) / (max - min)) * height;
+    if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
 
-    let velocity =
-        25.0 +
-        Math.sin(cardiacPhase) * 5.0;
+function draw() {
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  ctx.clearRect(0, 0, width, height);
+  ctx.strokeStyle = "rgba(124,141,165,.18)"; ctx.lineWidth = 1;
+  [height * .36, height * .73].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); });
+  ctx.fillStyle = "rgba(124,141,165,.72)"; ctx.font = "12px ui-monospace";
+  ctx.fillText("REDUCED CARDIOVASCULAR SIGNAL", 16, height * .36 - 14);
+  ctx.fillText("SYNTHETIC MEMBRANE POTENTIAL", 16, height * .73 - 14);
+  drawTrace(cardioHistory, 10, 50, height * .18, height * .22, "#4ade80", width);
+  drawTrace(neuralHistory, -85, 45, height * .60, height * .25, "#f87171", width);
+}
 
-    let systolic =
-        120 +
-        Math.sin(cardiacPhase) * 8.0;
+function updateReadouts() {
+  velocity.textContent = state.velocityCmS.toFixed(2);
+  pressure.textContent = `${Math.round(state.systolicMmhg)}/${Math.round(state.diastolicMmhg)}`;
+  membrane.textContent = state.membraneMv.toFixed(2);
+  elapsed.textContent = state.elapsed.toFixed(2);
+}
 
-    let diastolic =
-        80 +
-        Math.cos(waveOffset * 0.03) * 4.0;
-
-    const pulseWindow = simulationTick % 60;
-
-    if (pulseWindow < 5) {
-        velocity += 15.0;
-        systolic += 15.0;
+function frame(now) {
+  const frameSeconds = Math.min((now - previous) / 1000, .1); previous = now;
+  if (running) {
+    accumulator += frameSeconds;
+    while (accumulator >= DEFAULT_CONFIG.timeStep) {
+      state = advanceState(state);
+      cardioHistory.push(state.velocityCmS); neuralHistory.push(state.membraneMv);
+      if (cardioHistory.length > 500) { cardioHistory.shift(); neuralHistory.shift(); }
+      accumulator -= DEFAULT_CONFIG.timeStep;
     }
-
-    return {
-        velocity,
-        systolic,
-        diastolic
-    };
+  }
+  updateReadouts(); draw(); requestAnimationFrame(frame);
 }
 
-function electrophysiologyState() {
-    if (simulationTick % 80 === 0) {
-        actionPotential = 40.0;
-    } else {
-        actionPotential +=
-            (-70.0 - actionPotential) * 0.15;
-    }
-
-    return actionPotential;
-}
-
-function drawReferenceLines(width, height) {
-    ctx.save();
-
-    ctx.strokeStyle = "rgba(124, 141, 165, 0.18)";
-    ctx.lineWidth = 1;
-
-    const cardioBaseline = height * 0.38;
-    const neuroBaseline = height * 0.72;
-
-    ctx.beginPath();
-    ctx.moveTo(0, cardioBaseline);
-    ctx.lineTo(width, cardioBaseline);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(0, neuroBaseline);
-    ctx.lineTo(width, neuroBaseline);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(124, 141, 165, 0.65)";
-    ctx.font = "12px Courier New";
-
-    ctx.fillText(
-        "CARDIOVASCULAR FLOW",
-        16,
-        cardioBaseline - 14
-    );
-
-    ctx.fillText(
-        "NEURAL ACTION POTENTIAL",
-        16,
-        neuroBaseline - 14
-    );
-
-    ctx.restore();
-}
-
-function drawCardiovascularWave(width, height) {
-    const baseline = height * 0.38;
-    const amplitude = Math.min(34, height * 0.08);
-
-    ctx.save();
-
-    ctx.strokeStyle = "#4ade80";
-    ctx.lineWidth = 2;
-    ctx.shadowColor = "rgba(74, 222, 128, 0.35)";
-    ctx.shadowBlur = 7;
-
-    ctx.beginPath();
-
-    for (let x = 0; x < width; x += 2) {
-        let y =
-            baseline +
-            Math.sin(
-                (x + waveOffset) * 0.03
-            ) * amplitude;
-
-        const pulse =
-            (x + waveOffset) % 90;
-
-        if (pulse < 6) {
-            y -= amplitude * 1.2;
-        }
-
-        if (x === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-
-    ctx.stroke();
-    ctx.restore();
-}
-
-function drawNeuralWave(width, height) {
-    const baseline = height * 0.72;
-
-    ctx.save();
-
-    ctx.strokeStyle = "#f87171";
-    ctx.lineWidth = 2;
-    ctx.shadowColor = "rgba(248, 113, 113, 0.35)";
-    ctx.shadowBlur = 7;
-
-    ctx.beginPath();
-
-    for (let x = 0; x < width; x += 2) {
-        const impulsePosition =
-            (x + waveOffset) % 170;
-
-        let y = baseline;
-
-        if (impulsePosition < 12) {
-            y -= impulsePosition * 6;
-        } else if (impulsePosition < 22) {
-            y -= 72 - (impulsePosition - 12) * 12;
-        } else if (impulsePosition < 38) {
-            y += (impulsePosition - 22) * 2.4;
-        } else if (impulsePosition < 55) {
-            y += 38 - (impulsePosition - 38) * 2.2;
-        }
-
-        if (x === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-
-    ctx.stroke();
-    ctx.restore();
-}
-
-function updateTelemetry() {
-    const cardiovascular =
-        cardiovascularState();
-
-    const neuralVoltage =
-        electrophysiologyState();
-
-    if (vesselReadout) {
-        vesselReadout.textContent =
-            cardiovascular.velocity.toFixed(2);
-    }
-
-    if (pressureReadout) {
-        pressureReadout.textContent =
-            Math.round(cardiovascular.systolic) +
-            "/" +
-            Math.round(cardiovascular.diastolic);
-    }
-
-    if (nerveReadout) {
-        nerveReadout.textContent =
-            neuralVoltage.toFixed(2);
-    }
-}
-
-function render() {
-    if (!canvas || !ctx) return;
-
-    simulationTick += 1;
-    waveOffset += 2;
-
-    updateTelemetry();
-
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-
-    ctx.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-    drawReferenceLines(
-        width,
-        height
-    );
-
-    drawCardiovascularWave(
-        width,
-        height
-    );
-
-    drawNeuralWave(
-        width,
-        height
-    );
-
-    requestAnimationFrame(render);
-}
-
-if (canvas && ctx) {
-    resizeCanvas();
-
-    window.addEventListener(
-        "resize",
-        resizeCanvas
-    );
-
-    requestAnimationFrame(render);
-}
+toggle.addEventListener("click", () => {
+  running = !running; toggle.textContent = running ? "Pause" : "Resume";
+  status.textContent = running ? "Simulation active" : "Simulation paused";
+});
+document.querySelector("#reset-button").addEventListener("click", () => {
+  state = createState(); cardioHistory.length = 0; neuralHistory.length = 0; accumulator = 0;
+});
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas(); requestAnimationFrame(frame);

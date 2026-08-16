@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive reduced-model cardiovascular and neural telemetry visualization.">
 
     <title>Biomedical Telemetry Visualizer</title>
 
@@ -21,9 +22,9 @@
             </p>
         </div>
 
-        <div class="system-status">
+        <div class="system-status" id="system-status" role="status" aria-live="polite">
             <span class="status-dot"></span>
-            SIMULATION ACTIVE
+            Simulation active
         </div>
     </header>
 
@@ -36,13 +37,17 @@
                     <h2>Transient Biophysical Signal Oscilloscope</h2>
                 </div>
 
-                <span class="stream-label">BIOSTREAM-01</span>
+                <div class="controls">
+                    <button id="toggle-button" type="button">Pause</button>
+                    <button id="reset-button" type="button">Reset</button>
+                </div>
             </div>
 
             <canvas
                 id="biomedCanvas"
                 width="900"
-                height="500">
+                height="500"
+                aria-label="Synthetic cardiovascular and neural telemetry waveforms">
             </canvas>
         </section>
 
@@ -50,7 +55,7 @@
             <div class="card-heading">
                 <div>
                     <p class="eyebrow">TELEMETRY REGISTRY</p>
-                    <h2>Clinical State Array</h2>
+                    <h2>Scientific State Array</h2>
                 </div>
             </div>
 
@@ -65,7 +70,7 @@
                 </div>
 
                 <span class="descriptor">
-                    Mid-Artery Flow
+                    Reduced periodic flow generator
                 </span>
             </div>
 
@@ -80,7 +85,7 @@
                 </div>
 
                 <span class="descriptor">
-                    Dynamic Hemodynamic Scale
+                    Synthetic pressure waveform
                 </span>
             </div>
 
@@ -95,7 +100,7 @@
                 </div>
 
                 <span class="descriptor">
-                    Electrophysiological Spike
+                    Synthetic spike-and-recovery waveform
                 </span>
             </div>
 
@@ -103,19 +108,24 @@
                 <p class="eyebrow">ACTIVE MODELS</p>
 
                 <div class="model-row">
-                    <span>Cardiovascular Flow</span>
-                    <span class="online">ONLINE</span>
+                    <span>Cardiovascular generator</span>
+                    <span class="online">SYNTHETIC</span>
                 </div>
 
                 <div class="model-row">
-                    <span>Arterial Pressure</span>
-                    <span class="online">ONLINE</span>
+                    <span>Pressure generator</span>
+                    <span class="online">SYNTHETIC</span>
                 </div>
 
                 <div class="model-row">
-                    <span>Neural Electrophysiology</span>
-                    <span class="online">ONLINE</span>
+                    <span>Membrane-potential generator</span>
+                    <span class="online">SYNTHETIC</span>
                 </div>
+            </div>
+
+            <div class="metric-row elapsed">
+                <span class="label">Elapsed model time</span>
+                <div><span id="elapsed-readout" class="value">0.00</span><span class="unit">s</span></div>
             </div>
 
         </section>
@@ -123,9 +133,9 @@
     </main>
 
     <footer>
-        BiomedicalSystemsSolver ? Telemetry Visualization Layer
+        BiomedicalSystemsSolver &middot; Telemetry visualization layer &middot; Not for clinical use
     </footer>
 
-    <script src="src/app.js"></script>
+    <script type="module" src="src/app.js"></script>
 </body>
 </html>
