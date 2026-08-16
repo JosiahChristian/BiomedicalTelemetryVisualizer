@@ -36,10 +36,19 @@ export function validateSolverPayload(payload) {
   if (payload?.schema !== "biomedical-telemetry-playback/v1") return false;
   const axon = payload.axon?.voltage_mv;
   const flow = payload.flow?.velocity_cm_per_s;
+  const pressure = payload.pressure;
   const validAxon = Array.isArray(axon) && axon.length > 1 && axon.every(Number.isFinite);
   const validFlow = Array.isArray(flow) && flow.length > 1 && flow.every(Number.isFinite);
   const liveFlow = validFlow && Math.max(...flow) > 0 && Math.max(...flow) - Math.min(...flow) > 0.01;
-  return validAxon && liveFlow;
+  const validPressure = pressure === undefined || (
+    Number.isFinite(pressure.systolic_mmhg)
+    && Number.isFinite(pressure.diastolic_mmhg)
+    && pressure.systolic_mmhg > pressure.diastolic_mmhg
+    && Array.isArray(pressure.pressure_mmhg)
+    && pressure.pressure_mmhg.length > 1
+    && pressure.pressure_mmhg.every(Number.isFinite)
+  );
+  return validAxon && liveFlow && validPressure;
 }
 
 export function sampleSolverPlayback(payload, elapsed, periodSeconds = 6) {
@@ -47,5 +56,11 @@ export function sampleSolverPlayback(payload, elapsed, periodSeconds = 6) {
   const phase = (elapsed % periodSeconds) / periodSeconds;
   const axonIndex = Math.min(payload.axon.voltage_mv.length - 1, Math.floor(phase * payload.axon.voltage_mv.length));
   const flowIndex = Math.min(payload.flow.velocity_cm_per_s.length - 1, Math.floor(phase * payload.flow.velocity_cm_per_s.length));
-  return { elapsed, velocityCmS: payload.flow.velocity_cm_per_s[flowIndex], systolicMmhg: null, diastolicMmhg: null, membraneMv: payload.axon.voltage_mv[axonIndex] };
+  return {
+    elapsed,
+    velocityCmS: payload.flow.velocity_cm_per_s[flowIndex],
+    systolicMmhg: payload.pressure?.systolic_mmhg ?? null,
+    diastolicMmhg: payload.pressure?.diastolic_mmhg ?? null,
+    membraneMv: payload.axon.voltage_mv[axonIndex],
+  };
 }

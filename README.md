@@ -15,9 +15,10 @@ BiomedicalTelemetryVisualizer provides a dedicated visualization layer for simul
 
 The project separates biomedical telemetry from the aerospace cyber-physical visualization stack and establishes an independent environment for observing cardiovascular and electrophysiological system behavior.
 
-The current implementation renders continuously evolving synthetic
-physiological reference signals while exposing numerical telemetry associated
-with vascular flow, blood pressure, and neural membrane potential.
+The current implementation plays continuously evolving solver-exported traces
+for vascular flow, reduced-order arterial pressure, and neural membrane
+potential. Deterministic local generators remain an explicit availability
+fallback.
 
 ## Current Telemetry
 
@@ -36,18 +37,18 @@ The dashboard currently visualizes:
 
 The visualization engine uses the HTML5 Canvas API to render cardiovascular and electrophysiological waveforms directly in the browser.
 
-### Cardiovascular Simulation
+### Cardiovascular Playback
 
-A time-varying reduced waveform generator produces bounded vessel-velocity and
-pressure telemetry at a documented nominal heart rate.
+The primary cardiovascular feed combines a proximal velocity trace from the
+one-dimensional momentum-diffusion baseline with a separately documented
+two-element Windkessel pressure cycle. These reduced models are not yet
+bidirectionally coupled.
 
-Periodic pulse events perturb the underlying waveform to represent transient cardiac behavior.
+### Electrophysiological Playback
 
-### Electrophysiological Simulation
-
-The neural telemetry generator produces a documented recurring spike,
-hyperpolarization, and resting-potential recovery sequence. It is not a
-Hodgkin-Huxley integration.
+The primary neural trace is exported from the solver's spatial active-axon
+Hodgkin-Huxley model. The local fallback uses a documented recurring spike,
+hyperpolarization, and resting-potential recovery sequence.
 
 ### Real-Time Telemetry Registry
 
@@ -78,9 +79,8 @@ Node.js 20 or newer is required for testing.
 
 The primary artifact is served from
 `BiomedicalSystemsSolver/docs/telemetry-playback.json` and identifies its
-schema, solver functions, source version, and model limitations. Arterial
-pressure displays `N/A` during solver playback because the current
-momentum-diffusion baseline does not calculate pressure.
+schema, solver functions, source version, and model limitations. The arterial
+readout reports the exported Windkessel cycle's systolic and diastolic extrema.
 
 ## Technology
 

@@ -49,3 +49,26 @@ test("flat zero cardiovascular telemetry is rejected in favor of fallback", () =
   const payload = { schema: "biomedical-telemetry-playback/v1", axon: { voltage_mv: [-65, 40] }, flow: { velocity_cm_per_s: [0, 0] } };
   assert.equal(validateSolverPayload(payload), false);
 });
+
+test("solver pressure summary drives the arterial pressure readout", () => {
+  const payload = {
+    schema: "biomedical-telemetry-playback/v1",
+    axon: { voltage_mv: [-65, 40] },
+    flow: { velocity_cm_per_s: [16, 24] },
+    pressure: { pressure_mmhg: [76.4, 122.8], systolic_mmhg: 122.8, diastolic_mmhg: 76.4 },
+  };
+  assert.equal(validateSolverPayload(payload), true);
+  const state = sampleSolverPlayback(payload, 1, 6);
+  assert.equal(state.systolicMmhg, 122.8);
+  assert.equal(state.diastolicMmhg, 76.4);
+});
+
+test("inverted solver pressure bounds are rejected", () => {
+  const payload = {
+    schema: "biomedical-telemetry-playback/v1",
+    axon: { voltage_mv: [-65, 40] },
+    flow: { velocity_cm_per_s: [16, 24] },
+    pressure: { pressure_mmhg: [120, 80], systolic_mmhg: 80, diastolic_mmhg: 120 },
+  };
+  assert.equal(validateSolverPayload(payload), false);
+});
