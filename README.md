@@ -50,18 +50,14 @@ Physiological state variables are continuously propagated to numerical readouts 
 - Browser-native simulation
 - GitHub Pages
 
-## Related Systems
+## Related Software
 
-BiomedicalTelemetryVisualizer complements:
+- **BiomedicalSystemsSolver** — numerical modeling of cardiovascular and neural systems
+- **AeroCPSTelemetry** — separate browser-based aerospace telemetry application
 
-- **BiomedicalSystemsSolver** — computational biophysics solver for cardiovascular and neural system models
-- **Adaptive-Digital-Twin-Framework** — research framework for adaptive state estimation, uncertainty, machine learning, optimization, and intelligent control
+## Development Roadmap
 
-The aerospace telemetry environment is maintained separately in **AeroCPSTelemetry**.
-
-## Research Direction
-
-The visualizer provides a foundation for future integration of higher-fidelity biomedical model outputs, streamed solver telemetry, uncertainty visualization, anomaly detection, and adaptive digital-twin state monitoring.
+Future work may include higher-fidelity biomedical model outputs, streamed solver telemetry, uncertainty visualization, anomaly detection, and richer physiological state monitoring.
 
 ## Live Application
 
