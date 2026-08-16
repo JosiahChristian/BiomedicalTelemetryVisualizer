@@ -47,8 +47,8 @@ function draw() {
   ctx.strokeStyle = "rgba(124,141,165,.18)"; ctx.lineWidth = 1;
   [height * .36, height * .73].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); });
   ctx.fillStyle = "rgba(124,141,165,.72)"; ctx.font = "12px ui-monospace";
-  ctx.fillText("REDUCED CARDIOVASCULAR SIGNAL", 16, height * .36 - 14);
-  ctx.fillText("SYNTHETIC MEMBRANE POTENTIAL", 16, height * .73 - 14);
+  ctx.fillText("CARDIOVASCULAR VELOCITY TRACE", 16, height * .36 - 14);
+  ctx.fillText("MEMBRANE POTENTIAL TRACE", 16, height * .73 - 14);
   drawTrace(cardioHistory, 10, 50, height * .18, height * .22, "#4ade80", width);
   drawTrace(neuralHistory, -85, 45, height * .60, height * .25, "#f87171", width);
 }
