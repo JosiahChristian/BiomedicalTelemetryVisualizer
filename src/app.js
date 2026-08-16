@@ -84,7 +84,7 @@ document.querySelector("#reset-button").addEventListener("click", () => {
 window.addEventListener("resize", resizeCanvas);
 async function loadSolverTelemetry() {
   try {
-    const response = await fetch("https://josiahchristian.github.io/BiomedicalSystemsSolver/telemetry-playback.json");
+    const response = await fetch("https://josiahchristian.github.io/BiomedicalSystemsSolver/telemetry-playback.json?v=3d7ef261");
     if (!response.ok) throw new Error(`telemetry request failed: ${response.status}`);
     const payload = await response.json();
     if (!validateSolverPayload(payload)) throw new Error("telemetry schema validation failed");
