@@ -44,3 +44,8 @@ test("malformed solver payload is rejected", () => {
   assert.equal(validateSolverPayload({ schema: "wrong" }), false);
   assert.throws(() => sampleSolverPlayback({}, 0), TypeError);
 });
+
+test("flat zero cardiovascular telemetry is rejected in favor of fallback", () => {
+  const payload = { schema: "biomedical-telemetry-playback/v1", axon: { voltage_mv: [-65, 40] }, flow: { velocity_cm_per_s: [0, 0] } };
+  assert.equal(validateSolverPayload(payload), false);
+});

@@ -36,8 +36,10 @@ export function validateSolverPayload(payload) {
   if (payload?.schema !== "biomedical-telemetry-playback/v1") return false;
   const axon = payload.axon?.voltage_mv;
   const flow = payload.flow?.velocity_cm_per_s;
-  return Array.isArray(axon) && axon.length > 1 && axon.every(Number.isFinite)
-    && Array.isArray(flow) && flow.length > 1 && flow.every(Number.isFinite);
+  const validAxon = Array.isArray(axon) && axon.length > 1 && axon.every(Number.isFinite);
+  const validFlow = Array.isArray(flow) && flow.length > 1 && flow.every(Number.isFinite);
+  const liveFlow = validFlow && Math.max(...flow) > 0 && Math.max(...flow) - Math.min(...flow) > 0.01;
+  return validAxon && liveFlow;
 }
 
 export function sampleSolverPlayback(payload, elapsed, periodSeconds = 6) {
