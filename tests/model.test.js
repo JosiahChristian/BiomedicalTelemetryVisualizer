@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { advanceState, createState, sampleSolverPlayback, sampleState, validateSolverPayload } from "../src/model.js";
 
 test("initial state is explicit and reproducible", () => {
-  assert.deepEqual(createState(), { elapsed: 0, velocityCmS: 20, systolicMmhg: 120, diastolicMmhg: 80, membraneMv: -70 });
+  assert.deepEqual(createState(), { elapsed: 0, velocityCmS: 20, systolicMmhg: 120, diastolicMmhg: 80, arterialPressureMmhg: 80, membraneMv: -70 });
 });
 
 test("reduced cardiovascular values remain bounded", () => {
@@ -61,6 +61,7 @@ test("solver pressure summary drives the arterial pressure readout", () => {
   const state = sampleSolverPlayback(payload, 1, 6);
   assert.equal(state.systolicMmhg, 122.8);
   assert.equal(state.diastolicMmhg, 76.4);
+  assert.equal(state.arterialPressureMmhg, 76.4);
 });
 
 test("inverted solver pressure bounds are rejected", () => {

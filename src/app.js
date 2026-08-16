@@ -19,6 +19,7 @@ let accumulator = 0;
 let previous = performance.now();
 let solverPayload = null;
 const cardioHistory = [];
+const pressureHistory = [];
 const neuralHistory = [];
 
 function resizeCanvas() {
@@ -45,12 +46,14 @@ function draw() {
   const height = canvas.clientHeight;
   ctx.clearRect(0, 0, width, height);
   ctx.strokeStyle = "rgba(124,141,165,.18)"; ctx.lineWidth = 1;
-  [height * .36, height * .73].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); });
+  [height * .31, height * .61].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); });
   ctx.fillStyle = "rgba(124,141,165,.72)"; ctx.font = "12px ui-monospace";
-  ctx.fillText("CARDIOVASCULAR VELOCITY TRACE", 16, height * .36 - 14);
-  ctx.fillText("MEMBRANE POTENTIAL TRACE", 16, height * .73 - 14);
-  drawTrace(cardioHistory, 10, 50, height * .18, height * .22, "#4ade80", width);
-  drawTrace(neuralHistory, -85, 45, height * .60, height * .25, "#f87171", width);
+  ctx.fillText("CARDIOVASCULAR VELOCITY", 16, height * .31 - 12);
+  ctx.fillText("ARTERIAL PRESSURE", 16, height * .61 - 12);
+  ctx.fillText("MEMBRANE POTENTIAL", 16, height - 12);
+  drawTrace(cardioHistory, 10, 50, height * .14, height * .17, "#4ade80", width);
+  drawTrace(pressureHistory, 60, 140, height * .45, height * .18, "#facc15", width);
+  drawTrace(neuralHistory, -85, 45, height * .76, height * .18, "#f87171", width);
 }
 
 function updateReadouts() {
@@ -66,8 +69,14 @@ function frame(now) {
     accumulator += frameSeconds;
     while (accumulator >= DEFAULT_CONFIG.timeStep) {
       state = solverPayload ? sampleSolverPlayback(solverPayload, state.elapsed + DEFAULT_CONFIG.timeStep) : advanceState(state);
-      cardioHistory.push(state.velocityCmS); neuralHistory.push(state.membraneMv);
-      if (cardioHistory.length > 500) { cardioHistory.shift(); neuralHistory.shift(); }
+      cardioHistory.push(state.velocityCmS);
+      if (state.arterialPressureMmhg !== null) pressureHistory.push(state.arterialPressureMmhg);
+      neuralHistory.push(state.membraneMv);
+      if (cardioHistory.length > 500) {
+        cardioHistory.shift();
+        if (pressureHistory.length > 500) pressureHistory.shift();
+        neuralHistory.shift();
+      }
       accumulator -= DEFAULT_CONFIG.timeStep;
     }
   }
@@ -79,7 +88,7 @@ toggle.addEventListener("click", () => {
   status.textContent = running ? "Simulation active" : "Simulation paused";
 });
 document.querySelector("#reset-button").addEventListener("click", () => {
-  state = createState(); cardioHistory.length = 0; neuralHistory.length = 0; accumulator = 0;
+  state = createState(); cardioHistory.length = 0; pressureHistory.length = 0; neuralHistory.length = 0; accumulator = 0;
 });
 window.addEventListener("resize", resizeCanvas);
 async function loadSolverTelemetry() {
