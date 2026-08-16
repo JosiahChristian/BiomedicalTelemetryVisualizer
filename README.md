@@ -5,9 +5,9 @@ Browser-based scientific telemetry and visualization environment for computation
 [![Web validation](https://github.com/JosiahChristian/BiomedicalTelemetryVisualizer/actions/workflows/web-validation.yml/badge.svg)](https://github.com/JosiahChristian/BiomedicalTelemetryVisualizer/actions/workflows/web-validation.yml)
 [![Live application](https://img.shields.io/badge/live-GitHub%20Pages-38bdf8)](https://josiahchristian.github.io/BiomedicalTelemetryVisualizer/)
 
-> **Current boundary:** The live signals come from deterministic reduced
-> waveform generators. They are not clinical measurements and are not yet
-> streamed from `BiomedicalSystemsSolver`.
+> **Current boundary:** The application loads compact, versioned playback
+> traces exported by `BiomedicalSystemsSolver`. If that artifact is unavailable,
+> it explicitly falls back to deterministic reduced waveform generators.
 
 ## Overview
 
@@ -59,7 +59,7 @@ Physiological state variables are continuously propagated to numerical readouts 
 .
 ├── index.html                 # accessible visualization interface
 ├── src/app.js                # rendering, controls, and animation loop
-├── src/model.js              # deterministic reduced signal generators
+├── src/model.js              # solver playback adapter and local fallback
 ├── src/styles.css            # responsive visual system
 ├── tests/model.test.js       # boundedness and lifecycle tests
 └── .github/workflows/        # continuous validation
@@ -75,6 +75,12 @@ npm test
 ```
 
 Node.js 20 or newer is required for testing.
+
+The primary artifact is served from
+`BiomedicalSystemsSolver/docs/telemetry-playback.json` and identifies its
+schema, solver functions, source version, and model limitations. Arterial
+pressure displays `N/A` during solver playback because the current
+momentum-diffusion baseline does not calculate pressure.
 
 ## Technology
 
@@ -100,7 +106,8 @@ telemetry behavior only; they do not validate human physiology.
 
 ## Development Roadmap
 
-Future work may include higher-fidelity biomedical model outputs, streamed solver telemetry, uncertainty visualization, anomaly detection, and richer physiological state monitoring.
+Future work may include live streamed solver telemetry, uncertainty
+visualization, anomaly detection, and richer physiological state monitoring.
 
 ## Live Application
 

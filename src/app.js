@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, advanceState, createState } from "./model.js";
+import { DEFAULT_CONFIG, advanceState, createState, sampleSolverPlayback, validateSolverPayload } from "./model.js";
 
 const canvas = document.querySelector("#biomedCanvas");
 const ctx = canvas.getContext("2d");
@@ -8,10 +8,16 @@ const membrane = document.querySelector("#nerve-readout");
 const elapsed = document.querySelector("#elapsed-readout");
 const toggle = document.querySelector("#toggle-button");
 const status = document.querySelector("#system-status");
+const sourceLabels = {
+  flow: document.querySelector("#flow-source"),
+  pressure: document.querySelector("#pressure-source"),
+  neural: document.querySelector("#neural-source"),
+};
 let state = createState();
 let running = true;
 let accumulator = 0;
 let previous = performance.now();
+let solverPayload = null;
 const cardioHistory = [];
 const neuralHistory = [];
 
@@ -49,7 +55,7 @@ function draw() {
 
 function updateReadouts() {
   velocity.textContent = state.velocityCmS.toFixed(2);
-  pressure.textContent = `${Math.round(state.systolicMmhg)}/${Math.round(state.diastolicMmhg)}`;
+  pressure.textContent = state.systolicMmhg === null ? "N/A" : `${Math.round(state.systolicMmhg)}/${Math.round(state.diastolicMmhg)}`;
   membrane.textContent = state.membraneMv.toFixed(2);
   elapsed.textContent = state.elapsed.toFixed(2);
 }
@@ -59,7 +65,7 @@ function frame(now) {
   if (running) {
     accumulator += frameSeconds;
     while (accumulator >= DEFAULT_CONFIG.timeStep) {
-      state = advanceState(state);
+      state = solverPayload ? sampleSolverPlayback(solverPayload, state.elapsed + DEFAULT_CONFIG.timeStep) : advanceState(state);
       cardioHistory.push(state.velocityCmS); neuralHistory.push(state.membraneMv);
       if (cardioHistory.length > 500) { cardioHistory.shift(); neuralHistory.shift(); }
       accumulator -= DEFAULT_CONFIG.timeStep;
@@ -76,4 +82,22 @@ document.querySelector("#reset-button").addEventListener("click", () => {
   state = createState(); cardioHistory.length = 0; neuralHistory.length = 0; accumulator = 0;
 });
 window.addEventListener("resize", resizeCanvas);
-resizeCanvas(); requestAnimationFrame(frame);
+async function loadSolverTelemetry() {
+  try {
+    const response = await fetch("https://josiahchristian.github.io/BiomedicalSystemsSolver/telemetry-playback.json");
+    if (!response.ok) throw new Error(`telemetry request failed: ${response.status}`);
+    const payload = await response.json();
+    if (!validateSolverPayload(payload)) throw new Error("telemetry schema validation failed");
+    solverPayload = payload;
+    status.textContent = "Solver playback active";
+    sourceLabels.flow.textContent = "SOLVER";
+    sourceLabels.pressure.textContent = "UNAVAILABLE";
+    sourceLabels.neural.textContent = "SOLVER";
+  } catch (error) {
+    console.warn("Using reduced local generators:", error);
+    status.textContent = "Reduced-model fallback active";
+    Object.values(sourceLabels).forEach(label => { label.textContent = "SYNTHETIC"; });
+  }
+}
+
+resizeCanvas(); loadSolverTelemetry(); requestAnimationFrame(frame);

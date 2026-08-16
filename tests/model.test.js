@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { advanceState, createState, sampleState } from "../src/model.js";
+import { advanceState, createState, sampleSolverPlayback, sampleState, validateSolverPayload } from "../src/model.js";
 
 test("initial state is explicit and reproducible", () => {
   assert.deepEqual(createState(), { elapsed: 0, velocityCmS: 20, systolicMmhg: 120, diastolicMmhg: 80, membraneMv: -70 });
@@ -29,4 +29,18 @@ test("advance uses the configured fixed time step", () => {
 test("invalid model time is rejected", () => {
   assert.throws(() => sampleState(-1), RangeError);
   assert.throws(() => sampleState(Number.NaN), RangeError);
+});
+
+test("solver payload validation and playback preserve source values", () => {
+  const payload = { schema: "biomedical-telemetry-playback/v1", axon: { voltage_mv: [-65, 40, -70] }, flow: { velocity_cm_per_s: [0, 10, 20] } };
+  assert.equal(validateSolverPayload(payload), true);
+  const state = sampleSolverPlayback(payload, 2, 6);
+  assert.equal(state.membraneMv, 40);
+  assert.equal(state.velocityCmS, 10);
+  assert.equal(state.systolicMmhg, null);
+});
+
+test("malformed solver payload is rejected", () => {
+  assert.equal(validateSolverPayload({ schema: "wrong" }), false);
+  assert.throws(() => sampleSolverPlayback({}, 0), TypeError);
 });

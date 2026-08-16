@@ -31,3 +31,19 @@ export function sampleState(elapsed, config = DEFAULT_CONFIG) {
 export function advanceState(state, config = DEFAULT_CONFIG) {
   return sampleState(state.elapsed + config.timeStep, config);
 }
+
+export function validateSolverPayload(payload) {
+  if (payload?.schema !== "biomedical-telemetry-playback/v1") return false;
+  const axon = payload.axon?.voltage_mv;
+  const flow = payload.flow?.velocity_cm_per_s;
+  return Array.isArray(axon) && axon.length > 1 && axon.every(Number.isFinite)
+    && Array.isArray(flow) && flow.length > 1 && flow.every(Number.isFinite);
+}
+
+export function sampleSolverPlayback(payload, elapsed, periodSeconds = 6) {
+  if (!validateSolverPayload(payload)) throw new TypeError("invalid solver payload");
+  const phase = (elapsed % periodSeconds) / periodSeconds;
+  const axonIndex = Math.min(payload.axon.voltage_mv.length - 1, Math.floor(phase * payload.axon.voltage_mv.length));
+  const flowIndex = Math.min(payload.flow.velocity_cm_per_s.length - 1, Math.floor(phase * payload.flow.velocity_cm_per_s.length));
+  return { elapsed, velocityCmS: payload.flow.velocity_cm_per_s[flowIndex], systolicMmhg: null, diastolicMmhg: null, membraneMv: payload.axon.voltage_mv[axonIndex] };
+}
