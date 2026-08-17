@@ -81,6 +81,9 @@ The primary artifact is served from
 `BiomedicalSystemsSolver/docs/telemetry-playback.json` and identifies its
 schema, solver functions, source version, and model limitations. The arterial
 readout reports the exported Windkessel cycle's systolic and diastolic extrema.
+The producer publishes the corresponding
+[JSON Schema](https://github.com/JosiahChristian/BiomedicalSystemsSolver/blob/main/docs/telemetry-playback.schema.json)
+for integration review and compatibility checks.
 
 ## Technology
 
